@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Matchday
 
-## Getting Started
+Web app for football fixtures, results, league tables, top scorers, and standings charts. Users can save favorite leagues (PostgreSQL).
 
-First, run the development server:
+**Goals:** fast match overview; explore leagues and stats; hide football-data.org credentials behind `/api` routes; persist favorites in a database.
+
+## Tech stack
+
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Redux Toolkit + RTK Query, Recharts, Prisma + PostgreSQL, football-data.org API v4 (server-side via `FOOTBALL_DATA_API_TOKEN`).
+
+## Setup
+
+`.env.local`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+FOOTBALL_DATA_API_TOKEN=your_token_here
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Optional: `FOOTBALL_DATA_MATCH_MAX_DAYS` (default `10`, max `366`) — limits the date span sent to the matches API.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For favorites, run `npm run db:migrate` once with a valid `DATABASE_URL`. App: [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+Other commands (`build`, `db:deploy`, `lint`, …) are in `package.json` scripts.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy (Vercel + GitHub)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push the repo to GitHub (same account you already use with Vercel).
+2. In Vercel: **Add New… → Project → Import** the `matchday` repository. Framework: Next.js (auto). The repo includes `vercel.json`, so the build runs `npm run vercel-build` (`prisma migrate deploy` + `prisma generate` + `next build`).
+3. **PostgreSQL:** add a database (e.g. [Vercel Postgres](https://vercel.com/storage/postgres), [Neon](https://neon.tech), or Supabase). Copy the connection string (often `postgresql://…` with `?sslmode=require`).
+4. **Environment variables** in the project **Settings → Environment Variables** (Production + Preview if you want previews to work with DB):
+   - `FOOTBALL_DATA_API_TOKEN` — from [football-data.org](https://www.football-data.org/client/register)
+   - `DATABASE_URL` — your Postgres URL  
+   Optional: `FOOTBALL_DATA_MATCH_MAX_DAYS`
+5. **Deploy.** First successful build applies migrations and starts the app. Without `DATABASE_URL`, the build fails on purpose (migrations need a DB). Without the football token, match/league API routes return 503.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Hobby plan** is enough for a small app; watch football-data.org rate limits on the free API tier.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If you ever remove `vercel.json`, set **Build Command** manually to `npm run vercel-build` and keep the env vars as above.

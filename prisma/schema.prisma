@@ -1,0 +1,18 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FavoriteCompetition {
+  id        String   @id @default(cuid())
+  code      String   @unique @db.VarChar(32)
+  name      String?
+  createdAt DateTime @default(now())
+
+  @@map("favorite_competitions")
+}
